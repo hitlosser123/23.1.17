@@ -1,0 +1,94 @@
+串口分配：
+UART0:     console
+UART1:	 OPTICAL          9 bytes         LC302 14 bytes
+UART2:   RX-SBUS          SBUS  25 bytes
+UART3:   NC
+UART4:   
+UART5:   VISION
+UART6:   SONAR/TOF       SONAR  2bytes         TOF  9 bytes
+UART7:  BT               BT   30 bytes
+
+5 UARTs at least:  BT  OPTICAL SBUS VISION  TOF/SONAR
+SBUS和蓝牙的数据FIFO放不下，设计如下：
+	SBUS波特率100K=10Kbytes/S   1ms=10bytes   0.5ms  = 5bytes    两次数据间距几十毫秒 可接受延迟10ms
+	蓝牙/上位机 波特率921600=92Kbytes/s 0.5ms=46bytes  数据间距几十到几百毫秒  可接受延迟10ms
+	打开DMA，每1ms/0.5ms（1个系统时钟）检查一次DMA剩余量，判断是否一波数据结束 解析数据，切换DMA BUFAB
+					DMA永远不会满，不会进中断
+	发送：蓝牙、视觉需要10字节以上发送，使用DMA发送
+	            2019-7-27
+				
+2019-5-15：
+	FreeRTOS调通
+	整理目录
+
+2019-6-14：
+	整理FreeRTOS配置，ti直接把FreeRTOS的两个中断函数放在了启动文件里，有一些函数没有使能。
+	疑点：没找到SysTICK使能的地方。。
+	测试了EEPROM，写入，读出一致，未测试速度
+	SPI写 完成，逻辑分析仪触发有点问题，不是因为时钟频率，中间加入延时好了点
+	注意！！文件命名时，加上drv_，避免和ti的库函数的文件名字冲突，可能引起问题！！！
+	加入8个串口，未验证
+	SPI1读AK8975成功
+	M0 PWM out 0123          PB4567     成功
+	设置PWM时钟10M，1ms对应10000,  2ms对应20000    原来的数字×5即可
+	TM4C123的SPI的TX RX标的是对的，难道129的是我记错了？？
+
+2019-6-24：
+	ICM20602、SPL06成功，CS_ICM  PD7不能用，
+	串口2  DMA收发成功，需要加3句话。
+https://e2echina.ti.com/question_answer/microcontrollers/tiva_arm_cortex/f/96/t/113846
+
+2019-6-25：
+	LJI380装机，差UBEC可飞自稳。重量比330就少了几十克，桨保护圈太重。
+	装机太麻烦，好在电机孔位准
+	DMA通道重映射，每个通道一句话即可，一个串口2句话
+	串口6没有引出，串口7 RX没有引出，其余串口DMA收发全部成功！
+
+2019-7-26：
+	移植飞控，初步解决所有error和warning
+	
+2019-7-27:
+	uDMA必要的初始化放到system init里
+
+2019-7-28：
+	蓝牙发送、匿名上位机调参功能实现，EEPROM一次读2字节出错，4字节正常
+	光流和超声波查询法接收、蓝牙DMA+查询法接收，SBUS DMA+异常DMA复位法接收
+
+2019-7-29：
+	TFminiPlus状态机+串口查询接收
+	定高性能恢复
+	光流角度补偿
+	定点性能基本恢复
+
+2019-8-3：
+V1.2
+	SDK模式，自动起飞，自动降落
+
+2019-8-5：
+	追车
+
+2019-8-6：
+	循线
+	对天光流
+
+2019-8-7：
+V1.4
+	确定基本元素
+	开环环绕飞行
+
+2019-8-8：
+V1.5
+	稳定自转
+
+2019-8-9：
+V2.0
+	新硬件焊完
+	
+	
+2021-1-31
+
+写好串口4陀螺仪传数代码，优先级最高，一切正常！！！！！
+	
+	
+	
+	

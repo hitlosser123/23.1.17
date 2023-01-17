@@ -1,0 +1,48 @@
+德研电科那抄来的，还没验证，注意擦除的flash地址！！！！
+
+
+
+
+#include "systemInit.h"
+#include "uartGetPut.h"
+#include <hw_flash.h>
+#include <flash.h>
+#include <stdio.h>
+// 定义Flash 扇区号（每个扇区1024 字节）
+#define SECTION 62
+// Flash 读取操作
+char flashRead(unsigned long ulAddress)
+{
+char *pcData;
+pcData = (char *)(ulAddress);
+return(*pcData);
+}
+// 主函数(程序入口)
+int main(void)
+{
+char cString[ ] = "Hello, world\r\n";
+unsigned long *pulData;
+int i;
+char c;
+long size;
+clockInit( ); // 时钟初始化
+uartInit( ); // UART 初始化
+pulData = (unsigned long *)cString;
+if (FlashErase(SECTION * 1024)) // 擦除flash
+{
+uartPuts("<Erase error>\r\n");
+for (;;);
+}
+uartPuts("<Erase ok>\r\n"); size = 4 * (1 + sizeof(cString) / 4);
+if (FlashProgram(pulData, SECTION * 1024, size)) // 写入flash
+{
+} uartPuts("<Program error>\r\n");
+for (;;);
+uartPuts("<Program ok>\r\n");
+for (i = 0; i < sizeof(cString); i++)
+{
+c = flashRead(SECTION * 1024 + i); uartPutc(c); // 读取flash
+}
+uartPuts("<Read ok>\r\n");
+for (;;) ;
+}
